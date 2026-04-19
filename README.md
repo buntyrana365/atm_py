@@ -55,15 +55,16 @@ A professional, feature-rich ATM Management System built with **Flask** and **SQ
    ```
    *Edit `.env` and set a secure `FLASK_SECRET_KEY`.*
 
-### Running the Application
+### Deployment (Render.com)
 
-1. **Start the Flask server**:
-   ```bash
-   python atm.py
-   ```
-
-2. **Access the app**:
-   Open your browser and navigate to `http://127.0.0.1:5000`
+1.  **Create an account** on [Render.com](https://render.com).
+2.  **Dashboard** > **New** > **Web Service**.
+3.  Connect your GitHub repository.
+4.  Render will automatically detect the settings from `render.yaml`.
+5.  **Environment Variables**:
+    *   Add `DATABASE_URL`: Your Supabase connection string.
+    *   Add `FLASK_SECRET_KEY`: A secure random password.
+6.  Click **Deploy**.
 
 ## 🔑 Demo Credentials
 
@@ -77,13 +78,13 @@ A professional, feature-rich ATM Management System built with **Flask** and **SQ
 ├── templates/       # HTML view templates
 ├── atm.py           # Core application logic
 ├── requirements.txt # Project dependencies
-├── .env.example     # Environment variable template
+├── render.yaml      # Render deployment config
 └── .gitignore       # Git exclusion rules
 ```
 
 ## 🔒 Security Note
 
-The `atm.db` file and `.env` file are excluded from the repository to prevent leaking sensitive data or user information. Always use unique secret keys in production environments.
+The `atm.db` file and `.env` file are excluded from the repository. In production, the app uses **Supabase (PostgreSQL)** for persistence.
 
 ---
 
