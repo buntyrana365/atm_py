@@ -4,28 +4,46 @@ import sqlite3
 from functools import wraps
 from flask import Flask, g, render_template, request, redirect, url_for, session, flash
 from dotenv import load_dotenv
+import dj_database_url
 
 # Load environment variables from .env
 load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "fallback-secret-key-for-dev")
-DATABASE = os.getenv("DATABASE_NAME", "atm.db")
 
+# Database Configuration
+DATABASE_URL = os.getenv("DATABASE_URL")
+IS_POSTGRES = DATABASE_URL is not None and DATABASE_URL.startswith("postgres")
 
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE)
-    conn.row_factory = sqlite3.Row
-    return conn
+    if IS_POSTGRES:
+        import psycopg2
+        import psycopg2.extras
+        conn = psycopg2.connect(DATABASE_URL, sslmode="require")
+        # Make it behave like sqlite3.Row
+        conn.cursor_factory = psycopg2.extras.DictCursor
+        return conn
+    else:
+        conn = sqlite3.connect(os.getenv("DATABASE_NAME", "atm.db"))
+        conn.row_factory = sqlite3.Row
+        return conn
 
+def get_placeholder():
+    return "%s" if IS_POSTGRES else "?"
 
 def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    # Primary Key differences
+    pk_type = "SERIAL PRIMARY KEY" if IS_POSTGRES else "INTEGER PRIMARY KEY AUTOINCREMENT"
+    text_type = "TEXT" if IS_POSTGRES else "TEXT" # Both support TEXT
+    
     cursor.execute(
-        """
+        f"""
         CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {pk_type},
             name TEXT NOT NULL,
             account_number TEXT NOT NULL UNIQUE,
             pin TEXT NOT NULL,
@@ -37,9 +55,9 @@ def init_db():
     )
 
     cursor.execute(
-        """
+        f"""
         CREATE TABLE IF NOT EXISTS transactions (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id {pk_type},
             user_id INTEGER NOT NULL,
             type TEXT NOT NULL,
             amount REAL NOT NULL,
@@ -51,15 +69,20 @@ def init_db():
     )
     conn.commit()
 
-    user = cursor.execute(
-        "SELECT id FROM users WHERE account_number = ?",
-        ("12345678",),
-    ).fetchone()
+    p = get_placeholder()
+    
+    # Check if demo user exists
+    if IS_POSTGRES:
+        cursor.execute("SELECT id FROM users WHERE account_number = %s", ("12345678",))
+    else:
+        cursor.execute("SELECT id FROM users WHERE account_number = ?", ("12345678",))
+        
+    user = cursor.fetchone()
     if user is None:
         cursor.execute(
-            """
+            f"""
             INSERT INTO users (name, account_number, pin, bank_name, dob, balance)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES ({p}, {p}, {p}, {p}, {p}, {p})
             """,
             (
                 "Aman Sharma",
@@ -81,7 +104,10 @@ def load_logged_in_user():
         g.user = None
     else:
         conn = get_db_connection()
-        g.user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        p = get_placeholder()
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM users WHERE id = {p}", (user_id,))
+        g.user = cursor.fetchone()
         conn.close()
 
 
@@ -97,9 +123,11 @@ def login_required(view):
 
 def insert_transaction(user_id, transaction_type, amount, description=""):
     conn = get_db_connection()
+    cursor = conn.cursor()
+    p = get_placeholder()
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    conn.execute(
-        "INSERT INTO transactions (user_id, type, amount, timestamp, description) VALUES (?, ?, ?, ?, ?)",
+    cursor.execute(
+        f"INSERT INTO transactions (user_id, type, amount, timestamp, description) VALUES ({p}, {p}, {p}, {p}, {p})",
         (user_id, transaction_type, amount, timestamp, description),
     )
     conn.commit()
@@ -108,29 +136,39 @@ def insert_transaction(user_id, transaction_type, amount, description=""):
 
 def get_transactions(user_id, limit=None):
     conn = get_db_connection()
-    query = "SELECT * FROM transactions WHERE user_id = ? ORDER BY id DESC"
+    cursor = conn.cursor()
+    p = get_placeholder()
+    query = f"SELECT * FROM transactions WHERE user_id = {p} ORDER BY id DESC"
+    
     if limit:
-        query += " LIMIT ?"
-        rows = conn.execute(query, (user_id, limit)).fetchall()
+        query += f" LIMIT {int(limit)}"
+        cursor.execute(query, (user_id,))
     else:
-        rows = conn.execute(query, (user_id,)).fetchall()
+        cursor.execute(query, (user_id,))
+        
+    rows = cursor.fetchall()
     conn.close()
     return rows
 
 
 def get_user_by_credentials(account_number, pin):
     conn = get_db_connection()
-    user = conn.execute(
-        "SELECT * FROM users WHERE account_number = ? AND pin = ?",
+    cursor = conn.cursor()
+    p = get_placeholder()
+    cursor.execute(
+        f"SELECT * FROM users WHERE account_number = {p} AND pin = {p}",
         (account_number, pin),
-    ).fetchone()
+    )
+    user = cursor.fetchone()
     conn.close()
     return user
 
 
 def update_balance(user_id, new_balance):
     conn = get_db_connection()
-    conn.execute("UPDATE users SET balance = ? WHERE id = ?", (new_balance, user_id))
+    cursor = conn.cursor()
+    p = get_placeholder()
+    cursor.execute(f"UPDATE users SET balance = {p} WHERE id = {p}", (new_balance, user_id))
     conn.commit()
     conn.close()
 
@@ -236,6 +274,8 @@ def logout():
     return redirect(url_for("login"))
 
 
+# Ensure DB is initialized
+init_db()
+
 if __name__ == "__main__":
-    init_db()
     app.run(debug=True)
