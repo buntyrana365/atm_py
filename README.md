@@ -55,16 +55,21 @@ A professional, feature-rich ATM Management System built with **Flask** and **SQ
    ```
    *Edit `.env` and set a secure `FLASK_SECRET_KEY`.*
 
-### Deployment (Render.com)
+### Deployment (Hugging Face Spaces - 100% Free)
 
-1.  **Create an account** on [Render.com](https://render.com).
-2.  **Dashboard** > **New** > **Web Service**.
-3.  Connect your GitHub repository.
-4.  Render will automatically detect the settings from `render.yaml`.
-5.  **Environment Variables**:
-    *   Add `DATABASE_URL`: Your Supabase connection string.
-    *   Add `FLASK_SECRET_KEY`: A secure random password.
-6.  Click **Deploy**.
+1.  **Create a Space**: Go to [huggingface.co/new-space](https://huggingface.co/new-space).
+2.  **Name**: `atm-py`.
+3.  **SDK**: Choose **Docker**.
+4.  **Template**: Choose **Blank**.
+5.  **Privacy**: Public (Recommended for portfolios).
+6.  **Create Space**.
+7.  **Sync from GitHub**:
+    *   In the Space settings, find **"Connected GitHub Repository"**.
+    *   Connect your repository.
+8.  **Variables**: 
+    *   Go to **Settings** > **Variables and Secrets**.
+    *   Add `DATABASE_URL` (Supabase link).
+    *   Add `FLASK_SECRET_KEY`.
 
 ## 🔑 Demo Credentials
 
