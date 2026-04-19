@@ -1,0 +1,56 @@
+{% extends 'layout.html' %}
+
+{% block title %}Dashboard | ATM System{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid">
+  <section class="profile-card">
+    <div class="card-header">
+      <h2>Welcome, {{ g.user.name }}</h2>
+      <span>{{ g.user.bank_name }}</span>
+    </div>
+    <div class="profile-details">
+      <div><strong>Account Number</strong><span>{{ g.user.account_number }}</span></div>
+      <div><strong>Date of Birth</strong><span>{{ g.user.dob }}</span></div>
+      <div><strong>Balance</strong><span>₹{{ '%.2f' | format(g.user.balance) }}</span></div>
+    </div>
+    <div class="actions-row">
+      <a class="secondary-button" href="{{ url_for('deposit') }}">Deposit</a>
+      <a class="secondary-button" href="{{ url_for('withdraw') }}">Withdraw</a>
+      <a class="secondary-button" href="{{ url_for('balance') }}">Balance</a>
+    </div>
+  </section>
+
+  <section class="mini-statement-card">
+    <div class="card-header">
+      <h2>Mini Statement</h2>
+      <p>Last 3 transactions</p>
+    </div>
+    {% if transactions %}
+    <table class="transaction-table">
+      <thead>
+        <tr>
+          <th>Date & Time</th>
+          <th>Type</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for txn in transactions %}
+        <tr>
+          <td>{{ txn.timestamp }}</td>
+          <td>{{ txn.type }}</td>
+          <td class="amount">₹{{ '%.2f' | format(txn.amount) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <div class="history-link">
+      <a href="{{ url_for('history') }}">View full transaction history</a>
+    </div>
+    {% else %}
+    <p class="empty-state">No transactions have been recorded yet.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

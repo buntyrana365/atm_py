@@ -1,0 +1,22 @@
+{% extends 'layout.html' %}
+
+{% block title %}Balance | ATM System{% endblock %}
+
+{% block content %}
+<div class="info-card">
+  <div class="card-header">
+    <h2>Account Balance</h2>
+    <p>Review your current available funds.</p>
+  </div>
+  <div class="balance-display">
+    <span>Current Balance</span>
+    <strong>₹{{ '%.2f' | format(g.user.balance) }}</strong>
+  </div>
+  <div class="detail-block">
+    <div><strong>Name</strong><span>{{ g.user.name }}</span></div>
+    <div><strong>Account</strong><span>{{ g.user.account_number }}</span></div>
+    <div><strong>Bank</strong><span>{{ g.user.bank_name }}</span></div>
+  </div>
+  <a class="secondary-button" href="{{ url_for('dashboard') }}">Back to Dashboard</a>
+</div>
+{% endblock %}

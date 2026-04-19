@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block title %}Withdraw | ATM System{% endblock %}
+
+{% block content %}
+<div class="transaction-card">
+  <div class="card-header">
+    <h2>Withdraw Money</h2>
+    <p>Take cash out from your account safely.</p>
+  </div>
+  <form method="post" class="form-grid" onsubmit="return validateAmount('amount');">
+    <label for="amount">Amount</label>
+    <input id="amount" name="amount" type="number" min="1" step="0.01" placeholder="Enter amount" required />
+    <button type="submit" class="primary-button">Withdraw Now</button>
+  </form>
+</div>
+{% endblock %}
